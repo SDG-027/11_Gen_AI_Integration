@@ -148,6 +148,88 @@ app.post('/chat', async (req, res) => {
   res.json({ prompt, response, chatId: chat._id });
 });
 
+// --- POST /chat/streaming: Persistenter Chat mit Server-Sent Events (SSE) ---
+// Statt die komplette Antwort abzuwarten und auf einmal zu schicken, streamen wir hier
+// jeden Textbrocken sofort zum Client, sobald er vom Modell kommt.
+// Das Laden-Gefühl für den User ist damit deutlich besser — wie bei ChatGPT.
+app.post('/chat/streaming', async (req, res) => {
+  const { prompt, chatId } = req.body;
+
+  // Chat laden oder neu anlegen — identisches Pattern wie im /chat-Endpunkt
+  let chat: ChatDocument;
+  if (!chatId) {
+    chat = await Chat.create({ history: [systemPrompt as ChatMessage] });
+  } else {
+    chat = (await Chat.findById(chatId)) as ChatDocument;
+  }
+
+  // --- Stream anfordern ---
+  // Der einzige Unterschied zur normalen Anfrage: { stream: true }
+  // Das SDK gibt jetzt kein fertiges Response-Objekt zurück, sondern einen AsyncIterator —
+  // ein Objekt, über das wir mit "for await" Stück für Stück iterieren können.
+  const aiStream = await client.chat.completions.create({
+    model,
+    messages: [...chat!.history, { role: 'user', content: prompt }],
+    stream: true,
+  });
+
+  // --- SSE-Header setzen ---
+  // Wir wechseln das HTTP-Response-Format auf "Server-Sent Events".
+  // Das ist ein Standard, bei dem der Server die Verbindung offen hält und kontinuierlich
+  // Datenpakete schickt — statt einmal zu antworten und die Verbindung zu schließen.
+  // "text/event-stream" sagt dem Browser/Client: "Das ist ein SSE-Stream, lies ihn so."
+  // "keep-alive" hält die TCP-Verbindung offen.
+  // "no-cache" verhindert, dass ein Proxy die Pakete puffert und verzögert ausliefert.
+  res.writeHead(200, {
+    'content-type': 'text/event-stream',
+    connection: 'keep-alive',
+    'cache-control': 'no-cache',
+  });
+
+  // Hier sammeln wir die Textfragmente auf, um am Ende die komplette Antwort
+  // in der Datenbank speichern zu können.
+  let answer = '';
+
+  // --- Stream-Schleife ---
+  // "for await...of" ist die async-Variante von "for...of".
+  // Jede Iteration wartet auf das nächste "chunk"-Objekt vom Modell.
+  // Ein Chunk enthält meist nur wenige Wörter oder sogar nur ein einzelnes Token.
+  for await (const chunk of aiStream) {
+    // "delta" bedeutet "Änderung" — im Gegensatz zum /chat-Endpunkt ist das hier
+    // kein vollständiger Text, sondern nur das *neue Stück* seit dem letzten Chunk.
+    const text = chunk.choices[0]?.delta.content;
+
+    // Manche Chunks enthalten keinen Text (z.B. der letzte, der nur Metadaten trägt).
+    // "continue" überspringt diese und geht direkt zum nächsten Chunk.
+    if (!text) continue;
+
+    answer += text;
+
+    // SSE-Format: Jedes Paket beginnt mit "data: " und endet mit zwei Zeilenumbrüchen.
+    // Das doppelte \n\n ist Pflicht — es signalisiert dem Client das Ende eines Events.
+    res.write(`data: ${JSON.stringify(text)}\n\n`); // SSE
+  }
+
+  // --- Verlauf speichern ---
+  // Erst jetzt, nachdem der Stream vollständig ist, haben wir die komplette Antwort
+  // und können sie zusammen mit der User-Nachricht in die DB schreiben.
+  chat.history = [
+    ...chat!.history,
+    { role: 'user', content: prompt } as unknown as ChatMessage,
+    { role: 'assistant', content: answer } as unknown as ChatMessage,
+  ];
+
+  await chat.save();
+
+  // Die chatId als letztes Event schicken, damit der Client sie für Folgeanfragen hat.
+  // Wir verwenden "info:" statt "data:" als eigenen Event-Typ, um es von den Text-Chunks
+  // zu unterscheiden — der Client kann so gezielt auf dieses abschließende Event reagieren.
+  res.write(`info: ${JSON.stringify(chat._id)}\n\n`);
+
+  // Verbindung explizit schließen — der Client weiß jetzt: der Stream ist fertig.
+  res.end();
+});
+
 app.listen(PORT, () => {
   console.log(`Server listening on port ${PORT}`);
 });

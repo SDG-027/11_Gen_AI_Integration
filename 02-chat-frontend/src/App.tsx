@@ -5,15 +5,21 @@ import './App.css';
 
 import Lowlight from 'react-lowlight';
 import javascript from 'highlight.js/lib/languages/javascript';
+import bash from 'highlight.js/lib/languages/bash';
 
 import 'highlight.js/styles/night-owl.css';
 
 Lowlight.registerLanguage('js', javascript);
 Lowlight.registerLanguage('javascript', javascript);
+Lowlight.registerLanguage('ts', javascript);
+Lowlight.registerLanguage('typescript', javascript);
 
 const renderer = {
   code(snippet, lang) {
-    return <Lowlight key={this.elementId} language={lang} value={snippet} />;
+    const usedLang = Lowlight.hasLanguage(lang) ? lang : 'bash';
+    return (
+      <Lowlight key={this.elementId} language={usedLang} value={snippet} />
+    );
   },
 };
 
@@ -29,7 +35,25 @@ function App() {
     try {
       setPending(true);
       // TODO: Sendet prompt zum Backend und verarbeitet die Antwort
-      const res = await fetch('http://localhost:3000/chat', {
+      // const res = await fetch('http://localhost:3000/chat', {
+      //   method: 'POST',
+      //   headers: {
+      //     'Content-Type': 'application/json',
+      //   },
+      //   body: JSON.stringify({ prompt, chatId }),
+      // });
+
+      // if (!res.ok) throw new Error('Request failed');
+      // const data = await res.json();
+      // console.log(data);
+
+      // const aiRes = data.response.choices[0].message.content;
+
+      // setAiResponse(aiRes);
+      // setChatId(data.chatId);
+
+      // STREAMING
+      const res = await fetch('http://localhost:3000/chat/streaming', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -37,14 +61,38 @@ function App() {
         body: JSON.stringify({ prompt, chatId }),
       });
 
-      if (!res.ok) throw new Error('Request failed');
-      const data = await res.json();
-      console.log(data);
+      // res.body ist ein ReadableStream — der Browser hat die Verbindung offen gehalten
+      // und empfängt die Daten stückweise. Wir brauchen einen "Reader", um daraus lesen zu können.
+      if (!res.body) throw new Error('Request failed');
+      const reader = res.body.getReader();
 
-      const aiRes = data.response.choices[0].message.content;
+      // Der Stream liefert rohe Bytes (Uint8Array), keinen Text.
+      // Der TextDecoder wandelt diese Bytes in lesbare Strings um.
+      const decoder = new TextDecoder();
 
-      setAiResponse(aiRes);
-      setChatId(data.chatId);
+      // Wir lesen in einer Endlosschleife, bis der Server die Verbindung schließt (done === true).
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        // Bytes → String. (Ein einzelner Chunk kann mehrere SSE-Zeilen enthalten,
+        // in der Praxis aber meist nur eine.)
+        let chunk = decoder.decode(value);
+
+        // Wir unterscheiden anhand der SSE-Vorsilbe, was für ein Event angekommen ist.
+        // "data: " enthält einen Textfragment vom Modell — wir hängen ihn an die Antwort an.
+        if (chunk.startsWith('data: ')) {
+          chunk = chunk.slice(6); // Präfix entfernen, nur den JSON-Inhalt behalten
+          const parsedText = JSON.parse(chunk);
+          setAiResponse((p) => p + parsedText);
+        } else if (chunk.startsWith('info: ')) {
+          // "info: " ist unser eigener Event-Typ vom Backend — er enthält die chatId.
+          // Er kommt als letztes Event, nachdem der Stream vollständig ist.
+          chunk = chunk.slice(6);
+          const parsedText = JSON.parse(chunk);
+          setChatId(parsedText);
+        }
+      }
     } catch (error) {
       console.error('Error ', error);
     } finally {
