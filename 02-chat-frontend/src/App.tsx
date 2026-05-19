@@ -1,6 +1,21 @@
 import { useState } from 'react';
+import Markdown from 'marked-react';
 import type { SubmitEvent } from 'react';
 import './App.css';
+
+import Lowlight from 'react-lowlight';
+import javascript from 'highlight.js/lib/languages/javascript';
+
+import 'highlight.js/styles/night-owl.css';
+
+Lowlight.registerLanguage('js', javascript);
+Lowlight.registerLanguage('javascript', javascript);
+
+const renderer = {
+  code(snippet, lang) {
+    return <Lowlight key={this.elementId} language={lang} value={snippet} />;
+  },
+};
 
 function App() {
   const [pending, setPending] = useState(false);
@@ -14,6 +29,22 @@ function App() {
     try {
       setPending(true);
       // TODO: Sendet prompt zum Backend und verarbeitet die Antwort
+      const res = await fetch('http://localhost:3000/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ prompt, chatId }),
+      });
+
+      if (!res.ok) throw new Error('Request failed');
+      const data = await res.json();
+      console.log(data);
+
+      const aiRes = data.response.choices[0].message.content;
+
+      setAiResponse(aiRes);
+      setChatId(data.chatId);
     } catch (error) {
       console.error('Error ', error);
     } finally {
@@ -54,6 +85,7 @@ function App() {
       </form>
       <div className="mockup-window my-4 w-full flex-1 overflow-y-auto border px-4 text-start">
         {/* TODO: Setzt User-Frage und AI-Antwort hier ein  */}
+        {aiResponse && <Markdown value={aiResponse} renderer={renderer} />}
       </div>
     </main>
   );

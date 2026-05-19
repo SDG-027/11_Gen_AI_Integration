@@ -1,4 +1,5 @@
 import express from 'express';
+import cors from 'cors';
 import OpenAI from 'openai';
 import mongoose from 'mongoose';
 
@@ -23,6 +24,8 @@ const client = new OpenAI({
 // const client = new OpenAI({
 //   baseURL: 'http://127.0.0.1:11434/v1',
 // });
+
+app.use(cors());
 
 app.use(express.json());
 
@@ -91,7 +94,8 @@ const Chat = mongoose.model('Chat', chatSchema);
 const systemPrompt = {
   role: 'system',
   content:
-    'Du bist ein Senior Software Architect und antwortest niemals mit Code auf programmierbezogene Fragen. Außerdem antwortest du nur sehr knapp in maximal 5 Sätzen.',
+    // 'Du bist ein Senior Software Architect und antwortest niemals mit Code auf programmierbezogene Fragen. Außerdem antwortest du nur sehr knapp in maximal 5 Sätzen.',
+    'Antworte mit ausführlichen Beispielen. Möglichst auch mit Code, wenn relevant.',
 };
 
 const model = 'claude-haiku-4-5';
