@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { type ErrorRequestHandler } from 'express';
 import cors from 'cors';
 import OpenAI from 'openai';
 import mongoose from 'mongoose';
@@ -141,6 +141,11 @@ app.post('/chat/streaming', async (req, res) => {
 
   res.end();
 });
+
+app.use(((err, _req, res, _next) => {
+  console.log(err);
+  res.status(err.cause?.status || 500).json({ message: err.message });
+}) satisfies ErrorRequestHandler);
 
 app.listen(PORT, () => {
   console.log(`Server listening on port ${PORT}`);
