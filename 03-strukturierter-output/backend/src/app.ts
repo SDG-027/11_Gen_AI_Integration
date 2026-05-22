@@ -2,6 +2,8 @@ import express, { type ErrorRequestHandler } from 'express';
 import cors from 'cors';
 import OpenAI from 'openai';
 import mongoose from 'mongoose';
+import z from 'zod';
+import { zodResponseFormat } from 'openai/helpers/zod.js';
 
 await mongoose.connect(process.env.MONGO_URI!, { dbName: 'ai-chat' });
 
@@ -27,6 +29,11 @@ const client = new OpenAI({
   // base_url: "https://generativelanguage.googleapis.com/v1beta/openai/" // GEMINI
   // baseURL: "https://openrouter.ai/api/v1" // OpenRouter
 });
+
+// Alternativ: lokales Modell via Ollama — kein API-Key nötig
+// const client = new OpenAI({
+//   baseURL: 'http://127.0.0.1:11434/v1',
+// });
 
 app.use(cors());
 
@@ -68,7 +75,8 @@ const systemPrompt = {
     'Antworte mit ausführlichen Beispielen. Möglichst auch mit Code, wenn relevant.',
 };
 
-const model = 'claude-haiku-4-5';
+const model = 'claude-sonnet-4-6';
+
 app.post('/chat', async (req, res) => {
   const { prompt, chatId } = req.body;
 
@@ -98,7 +106,9 @@ app.post('/chat', async (req, res) => {
 });
 
 app.post('/chat/streaming', async (req, res) => {
-  const { prompt, chatId } = req.body;
+  const { prompt } = req.body;
+
+  const chatId = req.headers['x-chat-id'];
 
   let chat: ChatDocument;
   if (!chatId) {
@@ -107,39 +117,119 @@ app.post('/chat/streaming', async (req, res) => {
     chat = (await Chat.findById(chatId)) as ChatDocument;
   }
 
-  const aiStream = await client.chat.completions.create({
+  // client.chat.completions.stream() startet eine Streaming-Anfrage an OpenAI.
+  // Das SDK sendet uns die Fragmente (Chunks) der Antwort, sobald sie von der KI generiert werden,
+  // anstatt auf den kompletten Text zu warten.
+  const aiStream = client.chat.completions.stream({
     model,
     messages: [...chat!.history, { role: 'user', content: prompt }],
-    stream: true,
   });
 
-  res.writeHead(200, {
-    'content-type': 'text/event-stream',
-    connection: 'keep-alive',
+  res.set({
+    'content-type': 'text/plain; charset=utf-8', // einfacher Text als Antwortformat
+    'x-chat-id': chat._id.toString(), // die _id, um den Chat in der DB zu finden
+    'access-control-expose-headers': 'x-chat-id', // lässt den obigen Custom Header zu
     'cache-control': 'no-cache',
   });
 
-  let answer = '';
-
-  for await (const chunk of aiStream) {
-    const text = chunk.choices[0]?.delta.content;
-    if (!text) continue;
-
-    answer += text;
-    res.write(`data: ${JSON.stringify(text)}\n\n`); // SSE
+  // 'for await...of' durchläuft den Stream asynchron, sobald neue Daten eintreffen.
+  // .toReadableStream() wandelt den SDK-Stream in einen Standard-Web-Stream um,
+  // und res.write(chunk) schickt jedes Textfragment sofort live an den Client weiter.
+  for await (const chunk of aiStream.toReadableStream()) {
+    res.write(chunk);
   }
+
+  // Da wir gestreamt haben, haben wir noch keine fertige Gesamtantwort für unsere Datenbank.
+  // .finalMessage() wartet, bis der Stream komplett beendet ist, und liefert uns das
+  // vollständige finale Nachrichten-Objekt inklusive des gesamten Texts.
+  const answer = await aiStream.finalMessage();
+  const { content } = answer;
+
+  console.log({ answer });
 
   chat.history = [
     ...chat!.history,
     { role: 'user', content: prompt } as unknown as ChatMessage,
-    { role: 'assistant', content: answer } as unknown as ChatMessage,
+    { role: 'assistant', content: content } as unknown as ChatMessage,
   ];
 
   await chat.save();
 
-  res.write(`info: ${JSON.stringify(chat._id)}\n\n`);
-
   res.end();
+});
+
+// --------------------------------------
+// STRUKTURIERTER OUTPUT
+//
+// Zod-Schema, um KI-Output zu definieren
+const Recipe = z.object({
+  title: z.string().describe('The name of the recipe'), // .describe() fügt genaueren Kontext für dieses Feld hinzu, wenn der Keyname nicht ausreicht
+
+  ingredients: z.array(
+    z.object({
+      name: z.string().describe('The name of the ingredient'),
+      quantity: z.number(),
+      unit: z
+        .string()
+        .describe(
+          "The unity of the ingredient's quantity. Use European metric units only."
+        ),
+    })
+  ),
+  preparation_description: z
+    .string()
+    .describe('A short description of the meal preparation'),
+  time_in_minutes: z.number(),
+});
+
+app.post('/recipes', async (req, res) => {
+  const { prompt } = req.body;
+
+  // client.chat.completions.parse() wird für "Structured Outputs" genutzt.
+  // Anstatt Freitext liefert die KI ein garantiert valides JSON-Objekt,
+  // das exakt unserem übergebenen Zod-Schema ('Recipe') entspricht.
+  const recipe = await client.chat.completions.parse({
+    model,
+    messages: [
+      {
+        role: 'system',
+        content:
+          'Du bist ein kreativer, innovativer Chefkoch mit Vorliebe für Pfannkuchen.',
+      },
+      { role: 'user', content: prompt },
+    ],
+    response_format: zodResponseFormat(Recipe, 'recipe'),
+  });
+
+  // console.log(recipe);
+
+  // Über '.message.parsed' greifen wir direkt auf das bereits fertig
+  // validierte und geparste JavaScript-Objekt zu.
+  res.json({ recipe: recipe.choices[0]?.message.parsed });
+});
+
+// -------------------------------------
+// BILDGENERIERUNG
+
+//  Claude-modelle können (momentan) keine Medien erzeugen, daher hier ein extra Client zu Google
+const imageClient = new OpenAI({
+  baseURL: 'https://generativelanguage.googleapis.com/v1beta/openai/',
+  apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY,
+});
+
+app.post('/images', async (req, res) => {
+  const { prompt } = req.body;
+
+  // client.images.generate() triggert die Bildgenerierung.
+  // Hier nutzen wir das OpenAI SDK als Schnittstelle, um über die konfigurierte
+  // Google-Plattform ein Bild per Imagen-Modell zu erzeugen und als Base64-JSON zu erhalten.
+  const result = await imageClient.images.generate({
+    prompt,
+    model: 'imagen-4.0-generate-001',
+    response_format: 'b64_json',
+  });
+
+  res.json(result);
 });
 
 app.use(((err, _req, res, _next) => {
