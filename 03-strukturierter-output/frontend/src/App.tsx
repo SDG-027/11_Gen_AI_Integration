@@ -29,41 +29,45 @@ function App() {
   const [prompt, setPrompt] = useState('');
   const [chatId, setChatId] = useState('');
   const [aiResponse, setAiResponse] = useState('');
+  const [base64Img, setBase64Img] = useState('');
 
   const handleSubmit = async (e: SubmitEvent) => {
     e.preventDefault();
 
     try {
       setPending(true);
-      const res = await fetch('http://localhost:3000/chat/streaming', {
+      // const res = await fetch('http://localhost:3000/chat/streaming', {
+      //   method: 'POST',
+      //   headers: {
+      //     'Content-Type': 'application/json',
+      //     ...(chatId && { 'x-chat-id': chatId }),
+      //   },
+      //   body: JSON.stringify({ prompt }),
+      // });
+
+      // if (!res.body) throw new Error('Request failed');
+
+      // setChatId(res.headers.get('x-chat-id') || '');
+
+      // const runner = ChatCompletionStream.fromReadableStream(res.body);
+
+      // runner.on('content', (newChunk) => {
+      //   setAiResponse((p) => p + newChunk);
+      // });
+
+      // await runner.finalChatCompletion();
+      //
+      //
+      const res = await fetch('http://localhost:3000/images', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ prompt, chatId }),
+        body: JSON.stringify({ prompt }),
       });
 
-      if (!res.body) throw new Error('Request failed');
-      const reader = res.body.getReader();
-
-      const decoder = new TextDecoder();
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        let chunk = decoder.decode(value);
-
-        if (chunk.startsWith('data: ')) {
-          chunk = chunk.slice(6);
-          const parsedText = JSON.parse(chunk);
-          setAiResponse((p) => p + parsedText);
-        } else if (chunk.startsWith('info: ')) {
-          chunk = chunk.slice(6);
-          const parsedText = JSON.parse(chunk);
-          setChatId(parsedText);
-        }
-      }
+      const data = await res.json();
+      setBase64Img(data.data[0].b64_json);
     } catch (error) {
       console.error('Error ', error);
     } finally {
@@ -105,6 +109,10 @@ function App() {
       <div className="mockup-window my-4 w-full flex-1 overflow-y-auto border px-4 text-start">
         {/* TODO: Setzt User-Frage und AI-Antwort hier ein  */}
         {aiResponse && <Markdown value={aiResponse} renderer={renderer} />}
+
+        {base64Img && (
+          <img src={`data:image/png;base64, ${base64Img}`} alt="" width={200} />
+        )}
       </div>
     </main>
   );
