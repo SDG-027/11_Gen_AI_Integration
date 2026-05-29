@@ -1,0 +1,181 @@
+{
+  "name": "nasa_api_and_if_node",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -400,
+        -32
+      ],
+      "id": "66cf8819-cd0d-42e7-9367-af89d9443a89",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "download": false,
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.nasa",
+      "typeVersion": 1,
+      "position": [
+        -176,
+        -48
+      ],
+      "id": "367da733-a38d-459b-ba20-7fe6cf3ee966",
+      "name": "Get the astronomy picture of the day",
+      "credentials": {
+        "nasaApi": {
+          "id": "VlOSFDF4x0akUc34",
+          "name": "NASA account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fromEmail": "stephan.ullmann@posteo.de",
+        "toEmail": "stephan.ullmann@wbscodingschool.com",
+        "subject": "test",
+        "html": "={{ $json.explanation }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        352,
+        -192
+      ],
+      "id": "b9434092-b6d6-461f-805f-99f1d236d112",
+      "name": "Send an Email",
+      "webhookId": "ac1e8025-f439-4353-8448-3d54b544bb42",
+      "credentials": {
+        "smtp": {
+          "id": "I2GVeUWXDHybRYxr",
+          "name": "SMTP account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "ccb442be-35c2-4f3b-b31b-73d5e15523a3",
+              "leftValue": "={{ $('Get the astronomy picture of the day').item.json.title }}",
+              "rightValue": "supernova",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        304,
+        64
+      ],
+      "id": "d65f7441-8165-4a9f-9813-e27ae87ab61b",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "c0f0cbbf-18b8-4ba9-8488-e9d4a2aa2504",
+              "leftValue": "={{ $json.title.toLowerCase() }}",
+              "rightValue": "nebula",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        64,
+        -80
+      ],
+      "id": "df3ce4cb-ceb6-4fe2-a728-c841ba0671dc",
+      "name": "nebula-Filter"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Get the astronomy picture of the day",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get the astronomy picture of the day": {
+      "main": [
+        [
+          {
+            "node": "nebula-Filter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "nebula-Filter": {
+      "main": [
+        [
+          {
+            "node": "Send an Email",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "9f548ab9-2c5d-475f-a72b-c5d8d6bb42ae",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "6b948dc1e511c10ee55edde8f4d557acdc57cd5cd81c1d96dc805e9a629c900f"
+  },
+  "id": "I43pVI1avnte0Z8f",
+  "tags": []
+}

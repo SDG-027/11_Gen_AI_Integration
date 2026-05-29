@@ -1,0 +1,363 @@
+{
+  "name": "evaluation_workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "source": "googleSheets",
+        "documentId": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/15h0l4_8Cmh-9TFwNtQldFg1dsYyYW5I0VVhOJHEJ5dI/edit?gid=0#gid=0",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Tabellenblatt1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/15h0l4_8Cmh-9TFwNtQldFg1dsYyYW5I0VVhOJHEJ5dI/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": []
+        }
+      },
+      "type": "n8n-nodes-base.evaluationTrigger",
+      "typeVersion": 4.7,
+      "position": [
+        -304,
+        -48
+      ],
+      "id": "01e70446-d445-434a-b76d-8d908b96defb",
+      "name": "When fetching a dataset row",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "hUdIbAYB3erNmA2K",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={\n  \"message\": \"{{ $json.message }}\",\n  \"source\": \"{{ $json.source }}\",\n  \"customer_type\": \"{{ $json.customer_type }}\"\n} ",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You are an AI assistant working for a taco delivery startup. \n\nCustomers send messages through different sources like WhatsApp, Instagram, email, and website chat. \nYour job is to understand what the customer wants and decide what should happen next.\n\nYou will receive:\n- a message\n- the source\n- the customer type\n\nTry to figure out what the customer probably means and what the best next step is.\n\nPossible things customers might ask about include:\nmenu, tacos, prices, ordering, problems with orders, delivery, promotions, catering, partnerships, feedback, and other things.\n\n\nUse your best judgment to determine:\n- what the user wants\n- the language they are using\n- how confident you are, as a score between 0 - 1\n- what flow should handle this\n\nCustomer types might be things like:\nnew customers, existing customers, business customers, or something else if it seems right.\n\n\nFit any request to one of those flows for handoff, Do not invent any other kinds of flows.\n\nTry to respond with useful information about what the message means.\n\nExample structure you could return:\n\nintent: something like menu_question, ordering, issue, complaint, or other\nlanguage: detect language\nconfidence: a number\nsuggested_flow: which flow might handle it, choose from exaclty [order_capture_flow, order_tracking_flow, order_change_flow, cancel_order_flow]\n\nIf you think there are multiple intents, you can include them.\n\nYou can also include helpful notes if needed.\n\nInput:\nmessage\nsource\ncustomer_type\n\nOutput: JSON\nintent: string\nlanguage: string\nconfidence: a number\nsuggested_flow: string\n\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -80,
+        -48
+      ],
+      "id": "74d6a290-d7fa-4870-bc80-7112ada01fde",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-flash-lite",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        -64,
+        176
+      ],
+      "id": "46a76b11-5053-43be-8079-baf397ca4b2a",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "rIaONvBXomJlFkII",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n\t\"suggested_flow\": \"order_capture_flow\",\n    \"language\":\"en\",\n  \"intent\": \"complaint\",\n  \"confidence\": 0.7\n    \n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        64,
+        176
+      ],
+      "id": "d0c26522-0089-4203-8655-c95060c5e526",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.output.suggested_flow }}",
+                    "rightValue": "order_capture_flow",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "a7fe5454-1d86-4fbf-970e-24a83020e39a"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "6df55e2c-2cf6-4469-8245-7881b7b1f1e4",
+                    "leftValue": "={{ $json.output.suggested_flow }}",
+                    "rightValue": "order_tracking_flow",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "5ed688f7-4057-470c-b304-ea6a84e46718",
+                    "leftValue": "={{ $json.output.suggested_flow }}",
+                    "rightValue": "order_change_flow",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "7fbc2321-1f5b-4afc-8c73-c188fbd436df",
+                    "leftValue": "={{ $json.output.suggested_flow }}",
+                    "rightValue": "cancel_order_flow",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        272,
+        32
+      ],
+      "id": "62fb1543-4995-4f0f-a820-e63e9000f8ea",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "source": "googleSheets",
+        "documentId": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/15h0l4_8Cmh-9TFwNtQldFg1dsYyYW5I0VVhOJHEJ5dI/edit?gid=0#gid=0",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Tabellenblatt1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/15h0l4_8Cmh-9TFwNtQldFg1dsYyYW5I0VVhOJHEJ5dI/edit#gid=0"
+        },
+        "outputs": {
+          "values": [
+            {
+              "outputName": "actual_flow",
+              "outputValue": "={{ $json.output.suggested_flow }}"
+            },
+            {
+              "outputName": "actual_language",
+              "outputValue": "={{ $json.output.language }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.evaluation",
+      "typeVersion": 4.8,
+      "position": [
+        272,
+        -160
+      ],
+      "id": "9c0c2116-59a8-401c-9512-ab5d95c9d5e6",
+      "name": "Evaluation",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "hUdIbAYB3erNmA2K",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "setMetrics",
+        "metric": "categorization",
+        "expectedAnswer": "={{ $('When fetching a dataset row').item.json.expected_flow }}",
+        "actualAnswer": "={{ $json.output.suggested_flow }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.evaluation",
+      "typeVersion": 4.8,
+      "position": [
+        496,
+        -160
+      ],
+      "id": "acc8fd1a-1405-40dc-baa1-748aec6e781f",
+      "name": "Evaluation1"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -304,
+        160
+      ],
+      "id": "ed803e6a-97c3-43d3-ba4a-852f0cd456e6",
+      "name": "Get Customer Request"
+    }
+  ],
+  "pinData": {
+    "Get Customer Request": [
+      {
+        "json": {
+          "message": "How much are tacos?",
+          "source": "email",
+          "customer_type": "existing_customer"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "When fetching a dataset row": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Evaluation",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Evaluation": {
+      "main": [
+        [
+          {
+            "node": "Evaluation1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Customer Request": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "fe2930ca-1ea7-4c8d-a66f-b72730502d14",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "6b948dc1e511c10ee55edde8f4d557acdc57cd5cd81c1d96dc805e9a629c900f"
+  },
+  "id": "ZgKZjuqONLCbapPx",
+  "tags": [
+    {
+      "updatedAt": "2026-03-25T13:00:38.682Z",
+      "createdAt": "2026-03-25T13:00:38.682Z",
+      "id": "ayt1DGNEJcI6UYI0",
+      "name": "sdg27"
+    }
+  ]
+}

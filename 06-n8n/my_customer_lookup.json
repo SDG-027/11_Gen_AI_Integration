@@ -1,0 +1,364 @@
+{
+  "name": "my_customer_lookup",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -272,
+        -288
+      ],
+      "id": "f488c70b-7a44-41ca-8e66-dcf29bbfe835",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "09dc3e26-c493-4b72-b970-a32dadf48b2e",
+              "leftValue": "={{ $json.id }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -96,
+        -64
+      ],
+      "id": "92e98f06-3245-448d-b056-f2b63f1a5066",
+      "name": "hasID"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "ec8c5492-7243-4bf0-a63a-3820bfaca04d",
+              "leftValue": "={{ $('When Executed by Another Workflow').item.json.email }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        128,
+        32
+      ],
+      "id": "f3412561-5d2b-466c-bcc9-67a5a276097a",
+      "name": "hasEmail"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/1r0LIoF0dngb0xtcyOVKMLrvStbfbDKUxhA_EWKlDWlY/edit?gid=0#gid=0",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Customers",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1r0LIoF0dngb0xtcyOVKMLrvStbfbDKUxhA_EWKlDWlY/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "Email",
+              "lookupValue": "={{ $json.email }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        352,
+        -64
+      ],
+      "id": "a27d0e6d-d765-473b-8316-5f545ad693a4",
+      "name": "Get customer by email",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "hUdIbAYB3erNmA2K",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/1r0LIoF0dngb0xtcyOVKMLrvStbfbDKUxhA_EWKlDWlY/edit?gid=0#gid=0",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Customers",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1r0LIoF0dngb0xtcyOVKMLrvStbfbDKUxhA_EWKlDWlY/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "Id",
+              "lookupValue": "={{ $json.id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        352,
+        -256
+      ],
+      "id": "7ec485d7-b952-491a-9c08-c6f750372987",
+      "name": "Get customer by ID",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "hUdIbAYB3erNmA2K",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "errorMessage": "Email or Id missing"
+      },
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        352,
+        128
+      ],
+      "id": "120a213f-a2e7-4e16-8244-f6129f0a9e1f",
+      "name": "Stop and Error"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "8038087b-2476-4e8a-baf3-80e3df880d48",
+              "leftValue": "={{ $json.Id }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "exists",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "ce172948-4e20-4c9f-b162-dbcc1d0ba88b",
+              "leftValue": "={{ $json['Is Active'] }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        576,
+        -160
+      ],
+      "id": "12e61911-b644-4598-af7a-8aefd48e2173",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "errorMessage": "No active user"
+      },
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        800,
+        -160
+      ],
+      "id": "249dd5b5-b1aa-44bb-9e43-97ee9af929a8",
+      "name": "Stop and Error1"
+    },
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "id",
+              "type": "number"
+            },
+            {
+              "name": "email"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -288,
+        -64
+      ],
+      "id": "dbab1708-3187-44c1-84e7-107ddde2c48b",
+      "name": "When Executed by Another Workflow"
+    }
+  ],
+  "pinData": {
+    "When clicking ‘Execute workflow’": [
+      {
+        "json": {
+          "id": null,
+          "email": "wjones4@example.com"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        []
+      ]
+    },
+    "hasID": {
+      "main": [
+        [
+          {
+            "node": "Get customer by ID",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "hasEmail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "hasEmail": {
+      "main": [
+        [
+          {
+            "node": "Get customer by email",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Stop and Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get customer by ID": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get customer by email": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Stop and Error1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "hasID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "1e68521f-56b2-4b28-85ac-94fef700ac02",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "6b948dc1e511c10ee55edde8f4d557acdc57cd5cd81c1d96dc805e9a629c900f"
+  },
+  "id": "NPRsvHdNjlL6OIKg",
+  "tags": []
+}

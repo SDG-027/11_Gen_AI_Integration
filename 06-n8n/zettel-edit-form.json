@@ -1,0 +1,121 @@
+{
+  "name": "zettel-edit-form",
+  "nodes": [
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "={{ $json.zettelhtml }}",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "text/html"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        448,
+        0
+      ],
+      "id": "ee17b29c-cbc4-4667-a175-b09f0b3e127f",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "path": "zettel-edit/:id",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*",
+          "rawBody": false
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "ba7ca79e-c696-4e61-b5bd-7298caadc6f0",
+      "name": "Webhook",
+      "webhookId": "faae630f-84bf-4a36-86a8-3f1e33f20d1e"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "TrgvcHqyI6Aq2ZIU",
+          "mode": "list",
+          "cachedResultName": "kassenzettel",
+          "cachedResultUrl": "/projects/XJIjlMZFCxfRf2Fm/datatables/TrgvcHqyI6Aq2ZIU"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "zettelid",
+              "keyValue": "={{ $json.params.id }}"
+            }
+          ]
+        },
+        "limit": 1
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        224,
+        0
+      ],
+      "id": "b22ef336-dc5b-4588-99d3-977f2be26c33",
+      "name": "Get row(s)"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Get row(s)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s)": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "6370737c-ecd6-4031-b739-23f94219ce95",
+  "meta": {
+    "instanceId": "6b948dc1e511c10ee55edde8f4d557acdc57cd5cd81c1d96dc805e9a629c900f"
+  },
+  "id": "BKP5KcQ66A7ldGfa",
+  "tags": [
+    {
+      "updatedAt": "2026-03-22T10:40:47.895Z",
+      "createdAt": "2026-03-22T10:40:47.895Z",
+      "id": "Kx6dMYMFRgBgbM5c",
+      "name": "kassenzettel"
+    }
+  ]
+}

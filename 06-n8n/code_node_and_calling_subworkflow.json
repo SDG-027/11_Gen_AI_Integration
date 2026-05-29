@@ -1,0 +1,215 @@
+{
+  "name": "code_node_and_calling_subworkflow",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -528,
+        -16
+      ],
+      "id": "cf0458b9-5a3f-4b43-bb37-3f7e4015000d",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "jsCode": "if (Math.random() < 0.5) {\n  return {id: Math.floor(Math.random()*100)}\n} else {\n  const mails = [\n  'lshaw53@example.com',\n  'rturner54@example.com',\n  'telliott55@example.com',\n  'dwebb56@example.com',\n  'hchase57@example.com',\n  'cross58@example.com',\n  'jnichols59@example.com',\n  'lpena60@example.com',\n  'mschmidt61@example.com',\n  'aobrien62@example.com',\n  'kcurtis63@example.com',\n  'sfrancis64@example.com',\n  'cmyers65@example.com',\n  'rflores66@example.com',\n  'jwalter67@example.com',\n  'lgraham68@example.com',\n  'mwheeler69@example.com',\n  'dhayes70@example.com',\n  'ncastillo71@example.com',\n  'cmitchell72@example.com',\n  'srodriguez73@example.com',\n  'bmarshall74@example.com',\n  'mstone75@example.com',\n  'fboyd76@example.com',\n  'jchavez77@example.com',\n  'dwallace78@example.com',\n  'rfisher79@example.com',\n  'jowens80@example.com',\n  'snewman81@example.com',\n  'pcarroll82@example.com',\n  'lford83@example.com',\n  'aharris84@example.com',\n  'vschultz85@example.com',\n  'tstevens86@example.com',\n  'dmontgomery87@example.com',\n  'hray88@example.com',\n  'cpena89@example.com',\n  'jporter90@example.com',\n  'vfranklin91@example.com',\n  'pmitchell92@example.com',\n  'jwatson93@example.com',\n  'mweaver94@example.com',\n  'rlong95@example.com',\n  'kwoods96@example.com',\n  'sjohnson97@example.com',\n  'glee98@example.com',\n  'hscott99@example.com',\n  'zadams100@example.com',\n];\nconst email = mails[ Math.floor(Math.random()*mails.length) ]\n  return {email}\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -304,
+        -16
+      ],
+      "id": "e50ab416-d0a3-419c-97b3-161b9d34258b",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "NPRsvHdNjlL6OIKg",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/NPRsvHdNjlL6OIKg",
+          "cachedResultName": "my_customer_lookup"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "id": "={{ $json.id }}",
+            "email": "={{ $json.email }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "number",
+              "removed": false
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        -80,
+        -16
+      ],
+      "id": "6c61f51f-a533-494d-a2d3-1d11d94890c9",
+      "name": "Call 'my_customer_lookup'"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Name:  {{ $json['First Name'] }} {{ $json['Last Name'] }}\nLocation: {{ $json.City }}\nFavorite Tacos: {{ $json['Favorite Tacos (comma separated)'] }}\nAllowed Discount Rate: {{ $json['Allowed Discount Rate'] }}",
+        "options": {
+          "systemMessage": "You are a professional email writer for \"Tacolicious.com\". You are given the name, Location and Favorite Tacos from a registered Customer. \nInform them about their allowed Discounts at our place \"Tacolicious.com\"."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        144,
+        -16
+      ],
+      "id": "6327ee33-5a36-4644-ac2a-7a4860370f8e",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "claude-haiku-4-5-20251001",
+          "mode": "list",
+          "cachedResultName": "Claude Haiku 4.5"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.5,
+      "position": [
+        224,
+        208
+      ],
+      "id": "6cdb0ec2-175b-4c39-9abe-b26eb493a55a",
+      "name": "Anthropic Chat Model",
+      "credentials": {
+        "anthropicApi": {
+          "id": "Z6Hn8jKnzuBKwSUt",
+          "name": "Anthropic account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "html": "={{ $json.output }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        -528,
+        320
+      ],
+      "id": "c82e3bef-83ec-4d7a-b2d9-9823a65d5580",
+      "name": "Send an Email",
+      "webhookId": "4ed1dfb3-3a78-40d5-823a-ab2a70625134",
+      "credentials": {
+        "smtp": {
+          "id": "I2GVeUWXDHybRYxr",
+          "name": "SMTP account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Call 'my_customer_lookup'",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call 'my_customer_lookup'": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Anthropic Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "91ef969f-c4c3-44e0-b9e8-892388d6e251",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "6b948dc1e511c10ee55edde8f4d557acdc57cd5cd81c1d96dc805e9a629c900f"
+  },
+  "id": "3tHuEZRCdPl5SgXa",
+  "tags": [
+    {
+      "updatedAt": "2026-03-25T13:00:38.682Z",
+      "createdAt": "2026-03-25T13:00:38.682Z",
+      "id": "ayt1DGNEJcI6UYI0",
+      "name": "sdg27"
+    }
+  ]
+}

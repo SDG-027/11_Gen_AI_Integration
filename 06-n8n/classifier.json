@@ -1,0 +1,320 @@
+{
+  "name": "classifier",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -368,
+        -272
+      ],
+      "id": "fcd14cc1-a8aa-4723-a98f-8a42f7c50db7",
+      "name": "When chat message received",
+      "webhookId": "c01d6695-3a91-45dc-ad3c-d7a48feb4fd1"
+    },
+    {
+      "parameters": {
+        "inputText": "={{ $json.chatInput }}",
+        "categories": {
+          "categories": [
+            {
+              "category": "Beschwerde",
+              "description": "Ein Nutzer hat eine nachricht in einem Beschwerdetonfall geschrieben. möglicherweise negative Emotionen."
+            },
+            {
+              "category": "Kundensupport",
+              "description": "Eine Nutzeranfrage im neutralen oder positiven Tonfall, die sich um unsere Kissen dreht."
+            },
+            {
+              "category": "Sonstiges",
+              "description": "Alle Nutzeranfragen, die sich nicht um unser Produkt \"Flauschige Kissen\" dreht."
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.textClassifier",
+      "typeVersion": 1.1,
+      "position": [
+        -144,
+        -272
+      ],
+      "id": "e27985c6-710a-4baf-962b-651734f058ca",
+      "name": "Text Classifier"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "claude-haiku-4-5-20251001",
+          "mode": "list",
+          "cachedResultName": "Claude Haiku 4.5"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.5,
+      "position": [
+        -64,
+        -16
+      ],
+      "id": "a002312d-66ab-419f-8d12-a2c58200404c",
+      "name": "Anthropic Chat Model",
+      "credentials": {
+        "anthropicApi": {
+          "id": "Z6Hn8jKnzuBKwSUt",
+          "name": "Anthropic account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "0d52534e-c480-480f-bf18-ff0fa18001ad"
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        -368,
+        464
+      ],
+      "id": "6f8beb65-70c6-47d0-8c17-0edc29492315",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "Antworte gelassen und mit einem freundlichen Aphorismus"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        208,
+        -576
+      ],
+      "id": "c6d7f7f1-6532-47d3-9e2e-12f813123323",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "claude-opus-4-6",
+          "mode": "list",
+          "cachedResultName": "Claude Opus 4.6"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.5,
+      "position": [
+        288,
+        -352
+      ],
+      "id": "7ac34cab-e85d-41fc-b13f-3ead8552bcbf",
+      "name": "Anthropic Chat Model1",
+      "credentials": {
+        "anthropicApi": {
+          "id": "Z6Hn8jKnzuBKwSUt",
+          "name": "Anthropic account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "Antworte dem Kunden mithilfe unserer Datenbank"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        208,
+        -64
+      ],
+      "id": "488befdc-259e-43f5-8495-c8a6bc49f390",
+      "name": "AI Agent1"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "claude-sonnet-4-6",
+          "cachedResultName": "Claude Sonnet 4.6"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.5,
+      "position": [
+        288,
+        160
+      ],
+      "id": "55d8800a-d88a-4efe-afe7-7e66783d45d4",
+      "name": "Anthropic Chat Model2",
+      "credentials": {
+        "anthropicApi": {
+          "id": "Z6Hn8jKnzuBKwSUt",
+          "name": "Anthropic account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mongoDbTool",
+      "typeVersion": 1.3,
+      "position": [
+        -368,
+        256
+      ],
+      "id": "d97bba96-df04-4570-b837-354e5811cf72",
+      "name": "Find documents in MongoDB",
+      "credentials": {
+        "mongoDb": {
+          "id": "nEYzev60ICs8R4ex",
+          "name": "MongoDB account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "formFields": {
+          "values": [
+            {
+              "fieldType": "file"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.form",
+      "typeVersion": 2.5,
+      "position": [
+        752,
+        -256
+      ],
+      "id": "4e432b07-c634-45a5-a178-9803a7708098",
+      "name": "Form",
+      "webhookId": "216bf96a-2bd4-4e27-aa2b-1b896a344ce6"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Text Classifier",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Anthropic Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Text Classifier",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Text Classifier": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "AI Agent1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Anthropic Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Anthropic Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find documents in MongoDB": {
+      "ai_tool": [
+        []
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "941c254a-07fd-459b-b15c-aa9d8209d15a",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "6b948dc1e511c10ee55edde8f4d557acdc57cd5cd81c1d96dc805e9a629c900f"
+  },
+  "id": "PwdSgysDgnRnfLPI",
+  "tags": []
+}

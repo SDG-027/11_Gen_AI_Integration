@@ -1,0 +1,232 @@
+{
+  "name": "zettel-post-wh",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "zettel-save",
+        "responseMode": "lastNode",
+        "responseData": "noData",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -336,
+        0
+      ],
+      "id": "940644fc-96ad-4565-963d-3cefeae41dac",
+      "name": "Webhook",
+      "webhookId": "7e340db7-7a8b-4615-b813-17636cbc2353"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Die Daten kommen aus dem Body des Webhooks\nconst formData = $input.first().json.body; \nconst updatedArray = [];\nconst receiptId = formData.receipt_id; // Das versteckte Feld von vorhin!\n\nlet i = 0;\n// Wir loopen so lange, bis wir eine Nummer finden, die es nicht mehr gibt\nwhile (formData[`item_${i}`] !== undefined) {\n    updatedArray.push({\n        item: formData[`item_${i}`],\n        // Wir machen aus dem Text-Preis wieder eine echte Zahl:\n        cost: parseFloat(formData[`cost_${i}`]), \n        category: formData[`category_${i}`],\n        interpretation: formData[`interpretation_${i}`]\n    });\n    i++;\n}\n\n// Wir geben die ID und das reparierte Array weiter\nreturn { \n    receipt_id: receiptId, \n    data: updatedArray \n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -128,
+        0
+      ],
+      "id": "d216d9ac-648b-4485-8ba4-03edf73c8a23",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1R4VH6g02lEJhxYuVqN7wcBmel0ogJsRMuIMstNEPEO8",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/1R4VH6g02lEJhxYuVqN7wcBmel0ogJsRMuIMstNEPEO8/edit?gid=0#gid=0",
+          "mode": "url"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "item": "={{ $json.item }}",
+            "cost": "={{ $json.cost }}",
+            "category": "={{ $json.category }}",
+            "date": "={{ $now }}",
+            "zettelid": "={{ $('Code in JavaScript').item.json.receipt_id }}",
+            "day": "={{ $now.toFormat('yyyy-MM-dd') }}",
+            "month": "={{ $now.toFormat('yyyy-MM') }}",
+            "interpretation": "={{ $json.interpretation }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "zettelid",
+              "displayName": "zettelid",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "interpretation",
+              "displayName": "interpretation",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "item",
+              "displayName": "item",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "cost",
+              "displayName": "cost",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "category",
+              "displayName": "category",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "date",
+              "displayName": "date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "day",
+              "displayName": "day",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "month",
+              "displayName": "month",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {
+          "useAppend": true
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        416,
+        0
+      ],
+      "id": "67f2f37f-acaa-4566-a32b-6958aacdf8a4",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "hUdIbAYB3erNmA2K",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": " data",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        192,
+        0
+      ],
+      "id": "964f2fb1-ac6f-4d1c-8626-7e544910f858",
+      "name": "Split Out"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "069c3234-1c2d-4b5c-8c61-23653e8795bf",
+  "meta": {
+    "instanceId": "6b948dc1e511c10ee55edde8f4d557acdc57cd5cd81c1d96dc805e9a629c900f"
+  },
+  "id": "hf8v15If4531eXsM",
+  "tags": [
+    {
+      "updatedAt": "2026-03-22T10:40:47.895Z",
+      "createdAt": "2026-03-22T10:40:47.895Z",
+      "id": "Kx6dMYMFRgBgbM5c",
+      "name": "kassenzettel"
+    }
+  ]
+}
