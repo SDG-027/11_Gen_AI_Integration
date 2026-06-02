@@ -1,6 +1,6 @@
 import { Schema, model } from 'mongoose';
 
-interface IAuthor {
+export interface IAuthor {
   name: string;
   bio?: string;
   birthYear?: number;
