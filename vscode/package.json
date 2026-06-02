@@ -2,6 +2,9 @@
   "name": "books-authors-api",
   "version": "1.0.0",
   "type": "module",
+  "engines": {
+    "node": ">=24.0.0"
+  },
   "scripts": {
     "start": "node --env-file=.env src/server.ts",
     "dev": "node --watch --env-file=.env src/server.ts",
@@ -14,7 +17,7 @@
   },
   "devDependencies": {
     "@types/express": "^5.0.0",
-    "@types/node": "^22.0.0",
+    "@types/node": "^24.0.0",
     "@types/supertest": "^6.0.0",
     "mongodb-memory-server": "^10.0.0",
     "supertest": "^7.0.0",
