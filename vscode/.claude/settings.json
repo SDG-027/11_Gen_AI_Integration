@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git -C /home/stephan/coding/sdg27/11_Gen_AI_Integration/vscode diff 753d81eb2320dd1db715eb549dbcaf4b595ca1b1..bac23b9)",
+      "Bash(node --experimental-strip-types --test src/middleware/validate.test.ts)"
+    ]
+  }
+}

@@ -10,14 +10,14 @@ A REST API zur Verwaltung von Büchern und Autoren. Autoren und Bücher sind sep
 
 ## Tech Stack
 
-| Komponente | Entscheidung |
-|---|---|
-| Runtime | Node 24 mit `--experimental-strip-types` (kein Build-Step) |
-| Sprache | TypeScript 6 |
-| Framework | Express 5 |
-| Datenbank | MongoDB via Mongoose |
-| Validierung | Zod |
-| Env-Vars | Node 24 `--env-file=.env` (kein dotenv) |
+| Komponente  | Entscheidung                                               |
+| ----------- | ---------------------------------------------------------- |
+| Runtime     | Node 24 mit `--experimental-strip-types` (kein Build-Step) |
+| Sprache     | TypeScript 6                                               |
+| Framework   | Express 5                                                  |
+| Datenbank   | MongoDB via Mongoose                                       |
+| Validierung | Zod                                                        |
+| Env-Vars    | Node 24 `--env-file=.env` (kein dotenv)                    |
 
 ---
 
@@ -53,26 +53,26 @@ tsconfig.json
 
 ### Author
 
-| Feld | Typ | Pflicht |
-|---|---|---|
-| `_id` | ObjectId | auto |
-| `name` | string | ja |
-| `bio` | string | nein |
-| `birthYear` | number | nein |
-| `createdAt` / `updatedAt` | Date | auto (timestamps) |
+| Feld                      | Typ      | Pflicht           |
+| ------------------------- | -------- | ----------------- |
+| `_id`                     | ObjectId | auto              |
+| `name`                    | string   | ja                |
+| `bio`                     | string   | nein              |
+| `birthYear`               | number   | nein              |
+| `createdAt` / `updatedAt` | Date     | auto (timestamps) |
 
 ### Book
 
-| Feld | Typ | Pflicht |
-|---|---|---|
-| `_id` | ObjectId | auto |
-| `title` | string | ja |
-| `authorId` | ObjectId (ref: Author) | ja |
-| `isbn` | string | nein |
-| `publishedYear` | number | nein |
-| `genre` | string | nein |
-| `description` | string | nein |
-| `createdAt` / `updatedAt` | Date | auto (timestamps) |
+| Feld                      | Typ                    | Pflicht           |
+| ------------------------- | ---------------------- | ----------------- |
+| `_id`                     | ObjectId               | auto              |
+| `title`                   | string                 | ja                |
+| `authorId`                | ObjectId (ref: Author) | ja                |
+| `isbn`                    | string                 | nein              |
+| `publishedYear`           | number                 | nein              |
+| `genre`                   | string                 | nein              |
+| `description`             | string                 | nein              |
+| `createdAt` / `updatedAt` | Date                   | auto (timestamps) |
 
 ---
 
@@ -80,27 +80,28 @@ tsconfig.json
 
 ### Authors
 
-| Method | Path | Beschreibung |
-|---|---|---|
-| GET | `/authors` | Liste mit Pagination + Suche nach `name` |
-| GET | `/authors/:id` | Einzelner Author |
-| POST | `/authors` | Anlegen |
-| PUT | `/authors/:id` | Vollständiges Update |
-| DELETE | `/authors/:id` | Löschen |
+| Method | Path           | Beschreibung                             |
+| ------ | -------------- | ---------------------------------------- |
+| GET    | `/authors`     | Liste mit Pagination + Suche nach `name` |
+| GET    | `/authors/:id` | Einzelner Author                         |
+| POST   | `/authors`     | Anlegen                                  |
+| PUT    | `/authors/:id` | Vollständiges Update                     |
+| DELETE | `/authors/:id` | Löschen                                  |
 
 ### Books
 
-| Method | Path | Beschreibung |
-|---|---|---|
-| GET | `/books` | Liste mit Pagination + Suche nach `title`, `genre` |
-| GET | `/books/:id` | Einzelnes Buch |
-| POST | `/books` | Anlegen |
-| PUT | `/books/:id` | Vollständiges Update |
-| DELETE | `/books/:id` | Löschen |
+| Method | Path         | Beschreibung                                       |
+| ------ | ------------ | -------------------------------------------------- |
+| GET    | `/books`     | Liste mit Pagination + Suche nach `title`, `genre` |
+| GET    | `/books/:id` | Einzelnes Buch                                     |
+| POST   | `/books`     | Anlegen                                            |
+| PUT    | `/books/:id` | Vollständiges Update                               |
+| DELETE | `/books/:id` | Löschen                                            |
 
 ### Pagination Query Params
 
 Beide `GET`-Listen-Endpunkte akzeptieren:
+
 - `page` (default: 1)
 - `limit` (default: 10)
 
@@ -139,9 +140,7 @@ Zod-Validierungsfehler (422):
   "title": "Unprocessable Entity",
   "status": 422,
   "detail": "Request body validation failed",
-  "errors": [
-    { "path": "name", "message": "Required" }
-  ]
+  "errors": [{ "path": "name", "message": "Required" }]
 }
 ```
 
@@ -150,6 +149,7 @@ Zod-Validierungsfehler (422):
 ## Validierung (Zod)
 
 Für jede Ressource gibt es zwei Schemas:
+
 - **createSchema** — alle required Felder plus optionale
 - **updateSchema** — alle Felder optional (via `.partial()`)
 
@@ -173,8 +173,8 @@ Die `validate`-Middleware nimmt ein Zod-Schema, validiert `req.body` und gibt be
 ```json
 // package.json scripts
 {
-  "start": "node --experimental-strip-types --env-file=.env src/server.ts",
-  "dev": "node --experimental-strip-types --watch --env-file=.env src/server.ts"
+  "start": "node  --env-file=.env src/server.ts",
+  "dev": "node  --watch --env-file=.env src/server.ts"
 }
 ```
 
